@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UK Corporation Tax Calculator 2026/27</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --blue: #2C5BB8;
+      --blue-dark: #1E4391;
+      --blue-pale: #EEF3FC;
+      --gold: #B8893C;
+      --coral: #C85A4A;
+      --green: #1F6F4A;
+      --ink: #14151A;
+      --ink-soft: #3D414B;
+      --muted: #6B7280;
+      --paper: #FAF7F0;
+      --paper-warm: #F2EDE1;
+      --line: #E5E0D2;
+      --white: #FFFFFF;
+      --shadow: 0 22px 60px rgba(20, 21, 26, 0.08), 0 2px 8px rgba(20, 21, 26, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(44, 91, 184, 0.06), transparent 34%),
+        radial-gradient(circle at 90% 95%, rgba(184, 137, 60, 0.08), transparent 42%),
+        var(--paper);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 44px 18px;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .mini-calculator {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .mini-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    .mini-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--blue), #4A7AD4, var(--gold));
+    }
+
+    .mini-header {
+      padding: 34px 38px 26px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff 0%, #fffaf0 100%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--blue);
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--blue);
+    }
+
+    h1 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(30px, 5vw, 40px);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      margin-bottom: 12px;
+    }
+
+    .mini-header span {
+      display: block;
+      max-width: 610px;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    /* Tabs Horizontal Progress Navigation */
+    .tabs-nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--paper-warm);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab-step {
+      padding: 16px 20px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+
+    .tab-step:last-child { border-right: 0; }
+
+    .tab-step.active {
+      opacity: 1;
+      background: var(--white);
+    }
+
+    .tab-step.complete {
+      opacity: 0.9;
+    }
+
+    .tab-step .step-number {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .tab-step.active .step-number {
+      color: var(--blue);
+    }
+
+    .tab-step .step-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .tab-step.active .step-title {
+      color: var(--ink);
+    }
+
+    .tab-step.complete::after {
+      content: '✓';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--green);
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Content Panes handling */
+    .tab-content {
+      display: none;
+      padding: 34px 38px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Form Layouts */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 22px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field-full { grid-column: 1 / -1; }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field-label small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .field-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 13px 15px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(44, 91, 184, 0.10);
+    }
+
+    .money-input { position: relative; display: block; }
+    .money-input i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-family: 'Fraunces', Georgia, serif;
+      font-style: normal;
+      pointer-events: none;
+    }
+    .money-input input { padding-left: 32px; }
+
+    .error-message {
+      display: none;
+      color: var(--coral);
+      font-size: 12px;
+    }
+    .field.invalid .error-message { display: block; }
+    .field.invalid input { border-color: var(--coral); }
+
+    .salary-toggle {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: var(--paper);
+    }
+
+    .salary-toggle button {
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      color: var(--ink-soft);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .salary-toggle button:last-child { border-right: 0; }
+    .salary-toggle button.active { color: #fff; background: var(--blue); }
+
+    .notice {
+      display: none;
+      margin-top: 20px;
+      padding: 13px 15px;
+      color: var(--ink-soft);
+      background: #FFF8EC;
+      border-left: 3px solid var(--gold);
+      font-size: 13px;
+    }
+    .notice.show { display: block; }
+    .notice strong { color: var(--ink); }
+
+    .mini-actions {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .btn {
+      min-height: 48px;
+      padding: 13px 28px;
+      border: 0;
+      border-radius: 3px;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      transition: all 0.2s;
+    }
+    .btn.primary { color: #fff; background: var(--ink); }
+    .btn.ghost { color: var(--ink-soft); background: transparent; padding-left: 0; }
+    .btn.secondary { color: var(--ink); background: var(--paper-warm); border: 1px solid var(--line); }
+    .btn.primary:hover { background: var(--blue); }
+    .btn.ghost:hover { color: var(--blue); }
+    .btn.secondary:hover { background: var(--line); }
+
+    /* Results Screen styles inside Canvas */
+    .mini-result {
+      margin: -34px -38px;
+    }
+
+    .result-hero {
+      padding: 34px 38px;
+      color: #fff;
+      background: linear-gradient(135deg, #14151A 0%, #1E2531 100%);
+    }
+
+    .result-hero p {
+      color: rgba(255,255,255,0.55);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .result-hero strong {
+      display: block;
+      margin-top: 8px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(46px, 9vw, 64px);
+      font-weight: 300;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .result-hero span {
+      display: block;
+      margin-top: 10px;
+      color: rgba(255,255,255,0.68);
+      font-size: 13px;
+    }
+    .result-hero b { color: #fff; }
+
+    .band-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 24px 38px 0;
+      padding: 7px 12px;
+      color: var(--blue-dark);
+      background: var(--blue-pale);
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .band-pill::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .band-pill.small { color: var(--green); background: #E8F5EC; }
+    .band-pill.main { color: var(--coral); background: #FCE9E5; }
+    .band-pill.marginal { color: var(--gold); background: #FFF8EC; }
+    .band-pill.loss { color: var(--muted); background: var(--paper-warm); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin: 24px 38px 0;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .summary-grid div {
+      padding: 16px 14px;
+      background: var(--paper);
+    }
+
+    .summary-grid span,
+    .deadline-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .summary-grid strong,
+    .deadline-row strong {
+      display: block;
+      margin-top: 6px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1.1;
+    }
+
+    .breakdown {
+      margin: 24px 38px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 12px 0;
+      border-bottom: 1px dotted var(--line);
+      font-size: 14px;
+    }
+    .breakdown-row span:first-child { color: var(--ink-soft); }
+    .breakdown-row strong {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 16px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .breakdown-row.adjustment strong { color: var(--coral); }
+    .breakdown-row.total {
+      margin-top: 4px;
+      padding-top: 15px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 0;
+      font-weight: 900;
+    }
+
+    .deadline-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 24px 38px 0;
+    }
+
+    .deadline-row div {
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+    }
+
+    .deadline-row small {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .threshold-note {
+      margin: 24px 38px 24px;
+      padding: 14px 16px;
+      color: var(--ink-soft);
+      background: var(--paper-warm);
+      border-left: 3px solid var(--gold);
+      font-size: 13px;
+    }
+    .threshold-note strong { color: var(--ink); }
+
+    .results-actions {
+      padding: 0 38px 34px;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 18px 12px; }
+      .tabs-nav { grid-template-columns: 1fr; }
+      .tab-content { padding: 22px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .mini-actions { flex-direction: column-reverse; }
+      .btn.ghost { padding-left: 24px; background: var(--paper); text-align: center;}
+      .mini-result { margin: -22px -20px; }
+      .result-hero, .results-actions { padding-left: 22px; padding-right: 22px; }
+      .band-pill, .summary-grid, .breakdown, .deadline-row, .threshold-note { margin-left: 22px; margin-right: 22px; }
+      .summary-grid, .deadline-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="mini-calculator">
+    <div class="mini-card">
+      
+      <header class="mini-header">
+        <p class="eyebrow">UK Corporation Tax · 2026/27</p>
+        <h1>Corporation Tax Calculator</h1>
+        <span>Quick estimation using small profits rate, main rate, marginal relief, and short-period threshold logic.</span>
+      </header>
+
+      <nav class="tabs-nav" aria-label="Calculator Progress">
+        <div class="tab-step active" id="step1-indicator">
+          <span class="step-number">Step 1</span>
+          <span class="step-title">Company Details</span>
+        </div>
+        <div class="tab-step" id="step2-indicator">
+          <span class="step-number">Step 2</span>
+          <span class="step-title">Accounting Period</span>
+        </div>
+        <div class="tab-step" id="step3-indicator">
+          <span class="step-number">Step 3</span>
+          <span class="step-title">Tax Estimate</span>
+        </div>
+      </nav>
+
+      <form id="mini-tax-form" novalidate>
+        
+        <div class="tab-content active" id="pane-step1">
+          <div class="form-grid">
+            <label class="field field-full">
+              <span class="field-label">Taxable profit</span>
+              <span class="money-input"><i>£</i><input id="profit" name="profit" type="number" min="0" step="1000" placeholder="120000" required /></span>
+              <small class="field-note">Profit after allowable expenses — not turnover.</small>
+              <b class="error-message">Enter a valid positive profit figure.</b>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Associated companies</span>
+              <input id="associated" name="associated" type="number" min="1" max="50" step="1" value="1" />
+            </label>
+
+            <label class="field">
+              <span class="field-label">Augmented profits <small>optional</small></span>
+              <span class="money-input"><i>£</i><input id="augmented" name="augmented" type="number" min="0" step="1000" placeholder="Same as profit" /></span>
+            </label>
+
+            <div class="field field-full">
+              <span class="field-label">Director salaries deducted?</span>
+              <div class="salary-toggle" role="group" aria-label="Director salaries deducted">
+                <button type="button" class="active" data-salary="yes">Yes</button>
+                <button type="button" data-salary="no">No</button>
+                <button type="button" data-salary="na">No salaries</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice" id="instalmentNotice" role="status"></div>
+
+          <div class="mini-actions">
+            <button type="button" class="btn ghost" id="resetBtn">Reset</button>
+            <button type="button" class="btn primary" id="nextToStep2">Next Step →</button>
+          </div>
+        </div>
+
+        <div class="tab-content" id="pane-step2">
+          <div class="form-grid">
+            <label class="field">
+              <span class="field-label">Period start</span>
+              <input id="periodStart" name="periodStart" type="date" value="2026-04-01" required />
+            </label>
+
+            <label class="field">
+              <span class="field-label">Period end</span>
+              <input id="periodEnd" name="periodEnd" type="date" value="2027-03-31" required />
+            </label>
+          </div>
+
+          <div class="notice" id="periodNotice" role="status"></div>
+
+          <div class="mini-actions">
+            <button type="button" class="btn secondary" id="backToStep1">← Back</button>
+            <button type="submit" class="btn primary">Calculate Tax Summary</button>
+          </div>
+        </div>
+
+        <div class="tab-content" id="pane-step3">
+          <section class="mini-result">
+            <div class="result-hero">
+              <p>Estimated Corporation Tax</p>
+              <strong id="resultTax">£0</strong>
+              <span>Effective rate <b id="effectiveRate">0.00%</b></span>
+            </div>
+
+            <div class="band-pill" id="bandPill">—</div>
+
+            <div class="summary-grid">
+              <div><span>Taxable profit</span><strong id="resultProfit">£0</strong></div>
+              <div><span>Period</span><strong id="resultPeriod">365 days</strong></div>
+              <div><span>Lower limit</span><strong id="lowerLimit">£0</strong></div>
+              <div><span>Upper limit</span><strong id="upperLimit">£0</strong></div>
+            </div>
+
+            <div class="breakdown" id="breakdownRows"></div>
+
+            <div class="deadline-row">
+              <div>
+                <span>Payment due</span>
+                <strong id="paymentDate">—</strong>
+                <small id="paymentDays">—</small>
+              </div>
+              <div>
+                <span>CT600 filing</span>
+                <strong id="filingDate">—</strong>
+                <small id="filingDays">—</small>
+              </div>
+            </div>
+
+            <div class="threshold-note" id="thresholdNote"></div>
+
+            <div class="results-actions">
+              <button type="button" class="btn primary" id="recalculateBtn">← Recalculate or Edit</button>
+            </div>
+          </section>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const CONFIG = {
+      smallRate: 0.19,
+      mainRate: 0.25,
+      marginalFraction: 3 / 200,
+      baseLowerLimit: 50000,
+      baseUpperLimit: 250000,
+      instalmentsThreshold: 1500000,
+    };
+
+    const today = new Date();
+    const form = document.getElementById('mini-tax-form');
+    let salaryDeducted = 'yes';
+    let result = null;
+
+    const q = (selector) => document.querySelector(selector);
+    const qa = (selector) => Array.from(document.querySelectorAll(selector));
+
+    // Navigating Tabs System
+    function switchTab(stepIndex) {
+      // Manage views
+      qa('.tab-content').forEach((pane, idx) => {
+        pane.classList.toggle('active', idx === (stepIndex - 1));
+      });
+
+      // Manage indicator styles
+      qa('.tab-step').forEach((indicator, idx) => {
+        indicator.classList.remove('active', 'complete');
+        if (idx === (stepIndex - 1)) {
+          indicator.classList.add('active');
+        } else if (idx < (stepIndex - 1)) {
+          indicator.classList.add('complete');
+        }
+      });
+    }
+
+    function validateStep1() {
+      const profit = parseFloat(form.elements.profit.value);
+      const profitField = form.elements.profit.closest('.field');
+      let valid = true;
+
+      if (Number.isNaN(profit) || profit < 0) {
+        profitField.classList.add('invalid');
+        valid = false;
+      } else {
+        profitField.classList.remove('invalid');
+      }
+      return valid;
+    }
+
+    function validateStep2() {
+      const start = new Date(form.elements.periodStart.value);
+      const end = new Date(form.elements.periodEnd.value);
+      let valid = true;
+
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+        q('#periodNotice').innerHTML = '<strong>Check your dates:</strong> period end must be after period start.';
+        q('#periodNotice').classList.add('show');
+        valid = false;
+      }
+      return valid;
+    }
+
+    function checkPeriod() {
+      const start = new Date(form.elements.periodStart.value);
+      const end = new Date(form.elements.periodEnd.value);
+      const notice = q('#periodNotice');
+
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+
+      const days = Math.round((end - start) / 86400000) + 1;
+
+      if (days <= 0) {
+        notice.innerHTML = '<strong>Check your dates:</strong> period end must be after period start.';
+        notice.classList.add('show');
+      } else if (days < 365) {
+        notice.innerHTML = `<strong>Short period:</strong> ${days} days. The £50,000 and £250,000 limits are reduced proportionately.`;
+        notice.classList.add('show');
+      } else if (days > 547) {
+        notice.innerHTML = '<strong>Long period:</strong> accounting periods over 18 months usually need to be split for Corporation Tax.';
+        notice.classList.add('show');
+      } else {
+        notice.classList.remove('show');
+      }
+    }
+
+    function checkInstalments() {
+      const profit = parseFloat(form.elements.profit.value) || 0;
+      const notice = q('#instalmentNotice');
+
+      if (profit >= CONFIG.instalmentsThreshold) {
+        notice.innerHTML = '<strong>Heads up:</strong> profits above £1.5m may require quarterly instalment payments.';
+        notice.classList.add('show');
+      } else {
+        notice.classList.remove('show');
+      }
+    }
+
+    function calculate() {
+      const profit = parseFloat(form.elements.profit.value) || 0;
+      const augmentedInput = parseFloat(form.elements.augmented.value);
+      const augmented = Number.isNaN(augmentedInput) ? profit : augmentedInput;
+      const associated = Math.max(1, parseInt(form.elements.associated.value, 10) || 1);
+      const startDate = new Date(form.elements.periodStart.value);
+      const endDate = new Date(form.elements.periodEnd.value);
+      const periodDays = Math.round((endDate - startDate) / 86400000) + 1;
+      const periodFactor = Math.min(1, periodDays / 365);
+
+      const lowerLimit = (CONFIG.baseLowerLimit / associated) * periodFactor;
+      const upperLimit = (CONFIG.baseUpperLimit / associated) * periodFactor;
+
+      let tax = 0;
+      let band = 'loss';
+      let bandLabel = 'No tax due';
+      let marginalRelief = 0;
+      let preReliefTax = 0;
+
+      if (profit <= 0) {
+        tax = 0;
+      } else if (augmented <= lowerLimit) {
+        tax = profit * CONFIG.smallRate;
+        band = 'small';
+        bandLabel = 'Small profits rate · 19%';
+      } else if (augmented > upperLimit) {
+        tax = profit * CONFIG.mainRate;
+        band = 'main';
+        bandLabel = 'Main rate · 25%';
+      } else {
+        preReliefTax = profit * CONFIG.mainRate;
+        marginalRelief = CONFIG.marginalFraction * (upperLimit - augmented) * (profit / augmented);
+        tax = preReliefTax - marginalRelief;
+        band = 'marginal';
+        bandLabel = 'Marginal relief band';
+      }
+
+      const paymentDate = new Date(endDate);
+      paymentDate.setMonth(paymentDate.getMonth() + 9);
+      paymentDate.setDate(paymentDate.getDate() + 1);
+
+      const filingDate = new Date(endDate);
+      filingDate.setFullYear(filingDate.getFullYear() + 1);
+
+      return {
+        profit,
+        augmented,
+        associated,
+        periodDays,
+        periodFactor,
+        lowerLimit,
+        upperLimit,
+        tax,
+        band,
+        bandLabel,
+        marginalRelief,
+        preReliefTax,
+        effectiveRate: profit > 0 ? (tax / profit) * 100 : 0,
+        paymentDate,
+        filingDate,
+        salaryDeducted,
+      };
+    }
+
+    function renderResults() {
+      const r = result;
+
+      q('#resultTax').textContent = `£${fmt(r.tax)}`;
+      q('#effectiveRate').textContent = `${r.effectiveRate.toFixed(2)}%`;
+      q('#bandPill').textContent = r.bandLabel;
+      q('#bandPill').className = `band-pill ${r.band}`;
+      q('#resultProfit').textContent = `£${fmt(r.profit)}`;
+      q('#resultPeriod').textContent = `${r.periodDays} days`;
+      q('#lowerLimit').textContent = `£${fmt(r.lowerLimit)}`;
+      q('#upperLimit').textContent = `£${fmt(r.upperLimit)}`;
+
+      let html = '';
+      html += row('Taxable profit', `£${fmt(r.profit)}`);
+      html += row('Augmented profit', `£${fmt(r.augmented)}`);
+      html += row('Associated companies', `${r.associated}`);
+
+      if (r.band === 'marginal') {
+        html += row('Tax at main rate (25%)', `£${fmt(r.preReliefTax)}`);
+        html += row('Less marginal relief (3/200)', `−£${fmt(r.marginalRelief)}`, 'adjustment');
+      } else if (r.band === 'small') {
+        html += row('Tax at small profits rate (19%)', `£${fmt(r.tax)}`);
+      } else if (r.band === 'main') {
+        html += row('Tax at main rate (25%)', `£${fmt(r.tax)}`);
+      }
+
+      html += row('Corporation Tax due', `£${fmt(r.tax)}`, 'total');
+      q('#breakdownRows').innerHTML = html;
+
+      q('#paymentDate').textContent = fmtDate(r.paymentDate);
+      q('#paymentDays').textContent = daysFromNow(r.paymentDate);
+      q('#filingDate').textContent = fmtDate(r.filingDate);
+      q('#filingDays').textContent = daysFromNow(r.filingDate);
+
+      const notes = [];
+      if (r.associated > 1) notes.push(`<strong>Associated companies:</strong> limits divided by ${r.associated}.`);
+      if (r.periodFactor < 1) notes.push(`<strong>Short period:</strong> limits reduced to ${(r.periodFactor * 100).toFixed(1)}% of the standard thresholds.`);
+      if (r.salaryDeducted === 'no') notes.push('<strong>Salary warning:</strong> profit may be overstated because salaries were not deducted.');
+      if (r.periodDays > 547) notes.push('<strong>Long period:</strong> split calculation may be needed.');
+      if (notes.length === 0) notes.push('Standard thresholds applied — single company and 12-month period.');
+      q('#thresholdNote').innerHTML = notes.join(' ');
+    }
+
+    function row(label, value, extraClass = '') {
+      return `<div class="breakdown-row ${extraClass}"><span>${label}</span><strong>${value}</strong></div>`;
+    }
+
+    function fmt(value) {
+      return Math.round(value).toLocaleString('en-GB');
+    }
+
+    function fmtDate(date) {
+      return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function daysFromNow(date) {
+      const diff = Math.round((date - today) / 86400000);
+      if (diff < 0) return `${Math.abs(diff)} days ago`;
+      if (diff === 0) return 'Today';
+      return `In ${diff} days`;
+    }
+
+    function resetCalculator() {
+      form.reset();
+      form.elements.periodStart.value = '2026-04-01';
+      form.elements.periodEnd.value = '2027-03-31';
+      form.elements.associated.value = 1;
+      salaryDeducted = 'yes';
+      result = null;
+      qa('.salary-toggle button').forEach((button) => button.classList.toggle('active', button.dataset.salary === 'yes'));
+      q('#periodNotice').classList.remove('show');
+      q('#instalmentNotice').classList.remove('show');
+      form.elements.profit.closest('.field').classList.remove('invalid');
+      switchTab(1);
+    }
+
+    // Salary trigger choices
+    qa('.salary-toggle button').forEach((button) => {
+      button.addEventListener('click', () => {
+        qa('.salary-toggle button').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        salaryDeducted = button.dataset.salary;
+      });
+    });
+
+    // Real-time listeners
+    form.elements.periodStart.addEventListener('change', checkPeriod);
+    form.elements.periodEnd.addEventListener('change', checkPeriod);
+    form.elements.profit.addEventListener('input', () => {
+      form.elements.profit.closest('.field').classList.remove('invalid');
+      checkInstalments();
+    });
+
+    // Step Switching Controls
+    q('#nextToStep2').addEventListener('click', () => {
+      checkInstalments();
+      if (validateStep1()) {
+        switchTab(2);
+      }
+    });
+
+    q('#backToStep1').addEventListener('click', () => {
+      switchTab(1);
+    });
+
+    q('#recalculateBtn').addEventListener('click', () => {
+      switchTab(1);
+    });
+
+    q('#resetBtn').addEventListener('click', resetCalculator);
+
+    // Form Submit Event (Step 2 Submit -> Processes Calculations into Step 3 View)
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      checkPeriod();
+      if (!validateStep2()) return;
+      
+      result = calculate();
+      renderResults();
+      switchTab(3);
+    });
+  </script>
+</body>
+</html>
